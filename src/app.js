@@ -3,18 +3,13 @@ const connectdb = require('./config/database.js');
 const app = express();
 const User = require('./models/user');
 
+app.use(express.json());
 
 app.post("/signup", async (req, res) => {
+    console.log(req);
+ 
   try {
-    const user = new User({
-      firstName: "Virat",
-      lastName: "kohli",
-      email: "viratkohli@gmail.com", // unique email for each test
-      password: "12345678",
-      age: 37,
-      gender: "male",
-      bio: "I am a cricketer",
-    });
+    const user = new User(req.body);
 
     const savedUser = await user.save();
     console.log("User saved:", savedUser);
@@ -22,7 +17,8 @@ app.post("/signup", async (req, res) => {
   } catch (err) {
     console.error("Error saving user:", err);
     res.status(500).send("Error creating user: " + err.message);
-  }
+  
+}
 });
 
 
