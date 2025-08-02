@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 const userSchema = new mongoose.Schema({
    firstName:{
     type:String,
@@ -25,17 +26,20 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true,
         unique:true,
-        match:[/^\S+@\S+\.\S+$/,'Please enter a valid email address']
+        validate(value){
+            if(!validator.isEmail(value)){
+                throw new Error('Invalid email address');
+            }
+        }
     },
     password:{
         type:String,
         required:true,
         minlength:[8,'Password must be at least 8 characters long'],
         validate(value){
-            const inv = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            if(!inv.test(value)){
-                throw new Error('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
-            }
+           if(validator.isStrongPassword(value)){
+            throw new Error('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
+           }
         }
     },
     age:{
@@ -59,6 +63,15 @@ const userSchema = new mongoose.Schema({
         default:"enter about yourself",
         required:false,
         maxlength:[500,'Bio must be less than 500 characters']
+    },
+    photoUrl:{
+        type:String,
+        required:false,
+        validate(value){
+            if(!validator.isURL(value)){
+                throw new Error('Invalid photo URL');
+            }
+        }
     },
     skills:{
         type: [String],

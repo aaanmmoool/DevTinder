@@ -21,8 +21,8 @@ app.post("/signup", async (req, res) => {
 }
 });
 
-app.delete("/user", async (req,res)=>{
-    const userId = req.body.userId;
+app.delete("/user/:userId", async (req,res)=>{
+    const userId = req.params.userId;
    try{
     const user = await User.findByIdAndDelete({_id:userId});
     if(!user){
