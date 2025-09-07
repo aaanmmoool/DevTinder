@@ -5,49 +5,42 @@ const User = require('./models/user.js');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const {userAuth} = require('./middlewares/auth.js');
 
 app.use(express.json());
 app.use(cookieParser())
 
-app.get("/profile",async (req,res)=>{
-   const cookies = req.cookies;
-   const {token} = cookies;
-     if(!token){
-      throw new Error("Token not found");
-     }
-   const decoded = jwt.verify(token,"Anmol@123");
-   const user = await User.findById(decoded._id);
-   if(!user){
-    throw new Error("User not found");
-   }
-   res.send(user);
-   
-})
-app.post("/login", async (req,res)=>{
-  try{
-     const {email, password} = req.body;
-     const user = await User.findOne({email:email});
-     if(!user){
-       throw new Error("Invalid credentials");
-     }
-     const isPasswordValid = await bcrypt.compare(password,user.password);
-     if(isPasswordValid){
-       const token = jwt.sign({_id:user._id},"Anmol@123");
-       res.cookie("token",token);
-
-    }
-     else{
-       throw new Error("Invalid credentials");
-     }
+app.get("/profile",userAuth,async (req,res)=>{
+    const user = req.user;
     
-    res.send("Login successful");
-
-  }
-  catch(err){
-    console.error("Error logging in:", err);
-    res.status(500).send("Error logging in: " + err.message);
-  }
+   res.send(user);
 })
+app.post("/login", async (req, res) => {
+  try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email: email });
+      if (!user) {
+          // It's better to use a 400-level status for client errors
+          return res.status(400).send("Invalid credentials");
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (isPasswordValid) {
+          const token = jwt.sign({ _id: user._id }, "Anmol@123");
+          res.cookie("token", token);
+          // Send the success response and STOP execution here
+          return res.send("Login successful"); 
+      } else {
+          // Send the error response and STOP execution here
+          return res.status(400).send("Invalid credentials");
+      }
+
+  } catch (err) {
+      console.error("Error logging in:", err);
+      res.status(500).send("Error logging in: " + err.message);
+  }
+});
 
 app.post("/signup", async (req, res) => {
     try{

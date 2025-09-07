@@ -1,26 +1,32 @@
-const adminAuth = (req, res, next) => {
-    console.log("Checking admin authorization...")
-    const token = "xyz";
-    const authorized = token === 'xyz'; // Replace with actual token validation logic
-    if (authorized) {
-        next(); // User is an admin, proceed to the next middleware or route handler
-    } else {
-        res.status(403).send('Access denied. Admins only.'); // User is not an admin, send an error response
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
+
+
+
+const userAuth = async (req, res, next) => {
+    try{
+        const {token} = req.cookies;
+        if(!token){
+            throw new Error("Token not found");
+        }
+        const decoded = jwt.verify(token,"Anmol@123");
+       
+    
+        const user = await User.findById(decoded._id);
+        if(!user){
+            throw new Error("User not found");
+        }
+        req.user = user;
+        next();
+
     }
-}
-const userAuth = (req, res, next) => {
-    console.log("Checking user authorization...")
-    const token = "xyz";
-    const authorized = token === 'xyz'; // Replace with actual token validation logic
-    if (authorized) {
-        next(); // User is an admin, proceed to the next middleware or route handler
-    } else {
-        res.status(403).send('Access denied. Admins only.'); // User is not an admin, send an error response
+    catch(err){  
+        res.status(500).send("Error Authenticating user: " + err.message);
     }
+
 }
 
 
 module.exports = {
-  adminAuth,
   userAuth,
 };
